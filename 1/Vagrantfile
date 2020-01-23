@@ -1,0 +1,64 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :otusWeb => {
+        :box_name => "centos/7",
+        :net => [
+                  {ip: '192.168.11.150'},
+                ]
+  },
+  :otusLog => {
+        :box_name => "centos/7",
+        :net => [
+                  {ip: '192.168.11.151'},
+                ]
+  }
+}
+
+Vagrant.configure("2") do |config|
+
+  MACHINES.each do |boxname, boxconfig|
+
+      config.vm.define boxname do |box|
+
+          box.vm.box = boxconfig[:box_name]
+          box.vm.host_name = boxname.to_s
+
+          boxconfig[:net].each do |ipconf|
+            box.vm.network "private_network", ipconf
+          end
+
+          case boxname.to_s
+            when "otusLog"
+              config.vm.network "forwarded_port", guest: 5044, host: 5044
+              config.vm.network "forwarded_port", host: 9200, guest: 9200 # Elasticsearch
+              config.vm.network "forwarded_port", host: 9300, guest: 9300 # Elasticsearch
+              config.vm.network "forwarded_port", host: 5000, guest: 5000 # Logtash
+              config.vm.network "forwarded_port", host: 5601, guest: 5601 # Kibana
+          end
+
+          box.vm.provider :virtualbox do |vb|
+            vb.customize ["modifyvm", :id, "--memory", "4096"]
+          end
+          
+          box.vm.provision "shell", inline: <<-SHELL
+            mkdir -p ~root/.ssh
+            cp ~vagrant/.ssh/auth* ~root/.ssh
+          SHELL
+
+          case boxname.to_s
+            when "otusWeb"
+              box.vm.provision "shell", inline: <<-SHELL
+                yum install epel-release -y
+                yum install nginx -y
+                systemctl start nginx
+          SHELL
+
+            when "otusLog"
+              box.vm.provision "shell", path: "elasticsearch-provision.sh"
+              box.vm.provision "shell", path: "kibana-provision.sh"
+            end
+      end
+  end
+end	
