@@ -1,0 +1,13 @@
+---
+- hosts: otusLog
+  become: yes
+  roles:
+   - server-rsyslog
+
+- hosts: otusWeb
+  become: yes
+  roles:
+   - epel
+   - nginx
+   - client-rsyslog
+   - audit-web
