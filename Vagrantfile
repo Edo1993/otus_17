@@ -32,8 +32,6 @@ Vagrant.configure("2") do |config|
 	      ansible.playbook = "playbook.yml"
 	      ansible.become = "true"
 	  end
-
-
       end
   end
 end
