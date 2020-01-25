@@ -23,6 +23,6 @@ sudo su
 cat /var/log/rsyslog/web/nginx_access.log | tail -50
 ```
 В ответ получить логи в консоли
-
+![Image_alt](https://github.com/Edo1993/otus_17/blob/master/1.png)
 
 
